@@ -208,4 +208,4 @@ This portfolio is open source and available for personal and commercial use.
 
 **Built with ❤️ for showcasing AI/ML & Data Science expertise**
 
-*Last Updated: December 2024* 
+*Last Updated: July 2025* 
