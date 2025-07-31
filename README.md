@@ -202,8 +202,8 @@ Portfolio/
 
 ## 📄 License
 
-This portfolio is open source and available for personal and commercial use.
-
+This portfolio is open source but not available for personal and commercial use.
+©devlop-suraj
 ---
 
 **Built with ❤️ for showcasing AI/ML & Data Science expertise**
