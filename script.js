@@ -656,6 +656,24 @@ function initTeddyCursor() {
     const synth = window.speechSynthesis;
     let currentUtterance = null;
     
+    // Ensure voices are loaded (important for consistent speech)
+    let voicesLoaded = false;
+    function loadVoices() {
+        const voices = synth.getVoices();
+        if (voices.length > 0) {
+            voicesLoaded = true;
+            console.log('✅ Voices loaded:', voices.length);
+        }
+    }
+    
+    // Load voices immediately
+    loadVoices();
+    
+    // Also listen for voiceschanged event (some browsers need this)
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    
     // Section messages
     const sectionMessages = {
         'home': "Hey I'm your teddy, How may I assist you?",
@@ -736,50 +754,69 @@ function initTeddyCursor() {
         
         // Check if speech synthesis is supported
         if ('speechSynthesis' in window) {
-            // Create a new utterance
-            currentUtterance = new SpeechSynthesisUtterance(text);
-            
-            // Configure voice properties for natural, pleasant sound
-            currentUtterance.rate = 1.0;  // Speed (0.1 to 10) - normal, natural pace
-            currentUtterance.pitch = 1.0; // Pitch (0 to 2) - normal, natural pitch
-            currentUtterance.volume = 0.85; // Volume (0 to 1) - comfortable listening level
-            
-            // Try to get a suitable voice
-            const voices = synth.getVoices();
-            
-            // Voice selection priority for natural voice:
-            // 1. Try Google US English (most natural)
-            // 2. Try Microsoft voices (good quality)
-            // 3. Try any clear English voice
-            // 4. Fallback to default
-            const preferredVoice = 
-                voices.find(voice => voice.name.includes('Google US English')) ||
-                voices.find(voice => voice.name.includes('Google') && voice.lang.startsWith('en')) ||
-                voices.find(voice => voice.name.includes('Microsoft Zira') || voice.name.includes('Microsoft David')) ||
-                voices.find(voice => voice.lang === 'en-US') ||
-                voices.find(voice => voice.lang.startsWith('en')) ||
-                voices[0];
-            
-            if (preferredVoice) {
-                currentUtterance.voice = preferredVoice;
-                console.log('🎤 Using voice:', preferredVoice.name);
-            }
-            
-            // Optional: Add event listeners
-            currentUtterance.onstart = () => {
-                console.log('🐻 Teddy is speaking...');
-            };
-            
-            currentUtterance.onend = () => {
-                console.log('🐻 Teddy finished speaking');
-            };
-            
-            currentUtterance.onerror = (event) => {
-                console.error('Speech synthesis error:', event.error);
-            };
-            
-            // Speak the message
-            synth.speak(currentUtterance);
+            // Wait a bit to ensure voices are loaded and speech is ready
+            setTimeout(() => {
+                // Create a new utterance
+                currentUtterance = new SpeechSynthesisUtterance(text);
+                
+                // Configure voice properties for natural, pleasant sound
+                currentUtterance.rate = 1.0;  // Speed (0.1 to 10) - normal, natural pace
+                currentUtterance.pitch = 1.0; // Pitch (0 to 2) - normal, natural pitch
+                currentUtterance.volume = 0.85; // Volume (0 to 1) - comfortable listening level
+                
+                // Try to get a suitable voice
+                const voices = synth.getVoices();
+                
+                // Voice selection priority for natural voice:
+                // 1. Try Google US English (most natural)
+                // 2. Try Microsoft voices (good quality)
+                // 3. Try any clear English voice
+                // 4. Fallback to default
+                const preferredVoice = 
+                    voices.find(voice => voice.name.includes('Google US English')) ||
+                    voices.find(voice => voice.name.includes('Google') && voice.lang.startsWith('en')) ||
+                    voices.find(voice => voice.name.includes('Microsoft Zira') || voice.name.includes('Microsoft David')) ||
+                    voices.find(voice => voice.lang === 'en-US') ||
+                    voices.find(voice => voice.lang.startsWith('en')) ||
+                    voices[0];
+                
+                if (preferredVoice) {
+                    currentUtterance.voice = preferredVoice;
+                    console.log('🎤 Using voice:', preferredVoice.name);
+                }
+                
+                // Optional: Add event listeners
+                currentUtterance.onstart = () => {
+                    console.log('🐻 Teddy is speaking...');
+                };
+                
+                currentUtterance.onend = () => {
+                    console.log('🐻 Teddy finished speaking');
+                };
+                
+                currentUtterance.onerror = (event) => {
+                    console.error('Speech synthesis error:', event.error);
+                    // Retry once if interrupted or canceled
+                    if (event.error === 'interrupted' || event.error === 'canceled') {
+                        console.log('🔄 Retrying speech...');
+                        setTimeout(() => {
+                            if (!synth.speaking) {
+                                synth.speak(currentUtterance);
+                            }
+                        }, 100);
+                    }
+                };
+                
+                // Resume if paused (fix for some browsers)
+                if (synth.paused) {
+                    synth.resume();
+                }
+                
+                // Speak the message
+                synth.speak(currentUtterance);
+                
+                console.log('🎙️ Speaking:', text);
+            }, 100); // Small delay to ensure speech synthesis is ready
         } else {
             console.warn('Speech synthesis not supported in this browser');
         }
