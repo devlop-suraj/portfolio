@@ -1,3 +1,47 @@
+// Welcome Animation Controller
+function initWelcomeAnimation() {
+    const welcomeOverlay = document.getElementById('welcomeOverlay');
+    const synth = window.speechSynthesis;
+    
+    // Check if user has already seen the welcome animation (session storage)
+    const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcome');
+    
+    if (hasSeenWelcome) {
+        // Skip animation if already seen in this session
+        welcomeOverlay.style.display = 'none';
+        return;
+    }
+    
+    // Speak welcome message
+    setTimeout(() => {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance("Welcome! Let's explore my portfolio!");
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.volume = 0.85;
+            
+            const voices = synth.getVoices();
+            const preferredVoice = voices.find(voice => voice.name.includes('Google US English')) || voices[0];
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+            
+            synth.speak(utterance);
+        }
+    }, 500);
+    
+    // Hide welcome screen after 3 seconds
+    setTimeout(() => {
+        welcomeOverlay.classList.add('hide');
+        sessionStorage.setItem('hasSeenWelcome', 'true');
+        
+        // Remove from DOM after animation completes
+        setTimeout(() => {
+            welcomeOverlay.style.display = 'none';
+        }, 500);
+    }, 3000);
+}
+
 // Mobile Navigation Toggle
 const hamburger = document.querySelector('.hamburger');
 const navMenu = document.querySelector('.nav-menu');
@@ -17,12 +61,23 @@ document.querySelectorAll('.nav-link').forEach(n => n.addEventListener('click', 
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
+        const targetId = this.getAttribute('href');
+        if (targetId === '#' || targetId === '#home') {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
             });
+        } else {
+            const target = document.querySelector(targetId);
+            if (target) {
+                const navbarHeight = document.querySelector('.navbar').offsetHeight;
+                const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - navbarHeight - 20;
+                
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+            }
         }
     });
 });
@@ -591,170 +646,174 @@ window.addEventListener('scroll', () => {
     }
 }); 
 
-// Cursor Movement Effects
-let cursorTrail, cursorParticles = [], cursorRipples = [];
-let isMoving = false;
-let moveTimeout;
-
-function initCursorEffects() {
-    // Create cursor trail
-    cursorTrail = document.createElement('div');
-    cursorTrail.className = 'cursor-trail';
-    document.body.appendChild(cursorTrail);
-
-    // Create cursor detector overlay
-    const cursorDetector = document.createElement('div');
-    cursorDetector.className = 'cursor-detector';
-    document.body.appendChild(cursorDetector);
-
-    // Track cursor movement
-    let lastX = 0, lastY = 0;
-    let moveCount = 0;
-
-    document.addEventListener('mousemove', (e) => {
-        const currentX = e.clientX;
-        const currentY = e.clientY;
+// Teddy Bear Cursor Effect with Text-to-Speech
+function initTeddyCursor() {
+    const teddies = document.querySelectorAll('.teddy');
+    const speechBubble = document.getElementById('teddySpeech');
+    const speechText = document.getElementById('speechText');
+    
+    // Initialize Speech Synthesis
+    const synth = window.speechSynthesis;
+    let currentUtterance = null;
+    
+    // Section messages
+    const sectionMessages = {
+        'home': "Hey, I'm Suraj AI assistant",
+        'about': "Hey! You're learning about me!",
+        'experience': "Hey! You're watching my Experience!",
+        'skills': "Check out my awesome Skills!",
+        'projects': "Look at my cool Projects!",
+        'responsibilities': "See my Positions of Responsibility!",
+        'contact': "Let's get in touch!"
+    };
+    
+    // Messages with emojis for display (emojis don't speak well)
+    const sectionMessagesDisplay = {
+        'home': "Hey, I'm Suraj AI assistant 🤖",
+        'about': "Hey! You're learning about me! 📖",
+        'experience': "Hey! You're watching my Experience! 💼",
+        'skills': "Check out my awesome Skills! 🚀",
+        'projects': "Look at my cool Projects! 💻",
+        'responsibilities': "See my Positions of Responsibility! 🌟",
+        'contact': "Let's get in touch! 📧"
+    };
+    
+    let currentSection = 'home';
+    let speechTimeout = null;
+    
+    // Show initial message
+    setTimeout(() => {
+        showMessage(sectionMessages['home'], sectionMessagesDisplay['home']);
+    }, 1000);
+    
+    // Track mouse movement
+    document.addEventListener('mousemove', (event) => {
+        teddies.forEach(teddy => {
+            teddy.style.left = event.clientX + 'px';
+            teddy.style.top = event.clientY + 'px';
+        });
+    });
+    
+    // Observe sections for intersection
+    const observerOptions = {
+        threshold: 0.3,
+        rootMargin: '-80px 0px -80px 0px'
+    };
+    
+    const sectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const sectionId = entry.target.id;
+                console.log('Section detected:', sectionId); // Debug log
+                if (sectionId && sectionId !== currentSection && sectionMessages[sectionId]) {
+                    currentSection = sectionId;
+                    console.log('Showing message for:', sectionId); // Debug log
+                    showMessage(sectionMessages[sectionId], sectionMessagesDisplay[sectionId]);
+                }
+            }
+        });
+    }, observerOptions);
+    
+    // Observe all sections
+    const sections = document.querySelectorAll('section[id]');
+    sections.forEach(section => {
+        sectionObserver.observe(section);
+    });
+    
+    // Also observe hero section
+    const heroSection = document.querySelector('.hero');
+    if (heroSection) {
+        heroSection.id = 'home';
+        sectionObserver.observe(heroSection);
+    }
+    
+    // Function to speak the message
+    function speakMessage(text) {
+        // Cancel any ongoing speech
+        if (synth.speaking) {
+            synth.cancel();
+        }
         
-        // Check if cursor actually moved
-        if (Math.abs(currentX - lastX) > 2 || Math.abs(currentY - lastY) > 2) {
-            moveCount++;
+        // Check if speech synthesis is supported
+        if ('speechSynthesis' in window) {
+            // Create a new utterance
+            currentUtterance = new SpeechSynthesisUtterance(text);
             
-            if (!isMoving) {
-                isMoving = true;
-                activateCursorEffects();
+            // Configure voice properties for natural, pleasant sound
+            currentUtterance.rate = 1.0;  // Speed (0.1 to 10) - normal, natural pace
+            currentUtterance.pitch = 1.0; // Pitch (0 to 2) - normal, natural pitch
+            currentUtterance.volume = 0.85; // Volume (0 to 1) - comfortable listening level
+            
+            // Try to get a suitable voice
+            const voices = synth.getVoices();
+            
+            // Voice selection priority for natural voice:
+            // 1. Try Google US English (most natural)
+            // 2. Try Microsoft voices (good quality)
+            // 3. Try any clear English voice
+            // 4. Fallback to default
+            const preferredVoice = 
+                voices.find(voice => voice.name.includes('Google US English')) ||
+                voices.find(voice => voice.name.includes('Google') && voice.lang.startsWith('en')) ||
+                voices.find(voice => voice.name.includes('Microsoft Zira') || voice.name.includes('Microsoft David')) ||
+                voices.find(voice => voice.lang === 'en-US') ||
+                voices.find(voice => voice.lang.startsWith('en')) ||
+                voices[0];
+            
+            if (preferredVoice) {
+                currentUtterance.voice = preferredVoice;
+                console.log('🎤 Using voice:', preferredVoice.name);
             }
             
-            // Update cursor trail position
-            cursorTrail.style.left = currentX - 10 + 'px';
-            cursorTrail.style.top = currentY - 10 + 'px';
-            cursorTrail.classList.add('active');
+            // Optional: Add event listeners
+            currentUtterance.onstart = () => {
+                console.log('🐻 Teddy is speaking...');
+            };
             
-            // Create particles every few movements
-            if (moveCount % 3 === 0) {
-                createCursorParticle(currentX, currentY);
+            currentUtterance.onend = () => {
+                console.log('🐻 Teddy finished speaking');
+            };
+            
+            currentUtterance.onerror = (event) => {
+                console.error('Speech synthesis error:', event.error);
+            };
+            
+            // Speak the message
+            synth.speak(currentUtterance);
+        } else {
+            console.warn('Speech synthesis not supported in this browser');
+        }
+    }
+    
+    function showMessage(speechMessage, displayMessage) {
+        if (speechText && speechBubble) {
+            // Clear existing timeout
+            if (speechTimeout) {
+                clearTimeout(speechTimeout);
             }
             
-            // Create ripple effect occasionally
-            if (moveCount % 10 === 0) {
-                createCursorRipple(currentX, currentY);
-            }
+            // Update text and show bubble
+            speechText.textContent = displayMessage;
+            speechBubble.classList.add('show');
             
-            // Create floating particles
-            if (moveCount % 5 === 0) {
-                createFloatingParticle(currentX, currentY);
-            }
+            // Speak the message (without emojis)
+            speakMessage(speechMessage);
             
-            lastX = currentX;
-            lastY = currentY;
-            
-            // Reset movement timeout
-            clearTimeout(moveTimeout);
-            moveTimeout = setTimeout(() => {
-                isMoving = false;
-                deactivateCursorEffects();
-            }, 1000); // Deactivate after 1 second of no movement
+            // Hide after 3 seconds
+            speechTimeout = setTimeout(() => {
+                speechBubble.classList.remove('show');
+            }, 3000);
         }
-    });
-
-    // Handle cursor leaving window
-    document.addEventListener('mouseleave', () => {
-        isMoving = false;
-        deactivateCursorEffects();
-    });
-}
-
-function activateCursorEffects() {
-    // Activate tech overlay
-    const techOverlay = document.querySelector('.tech-overlay');
-    if (techOverlay) {
-        techOverlay.classList.add('cursor-active');
-        techOverlay.classList.remove('cursor-inactive');
-    }
-    
-    // Activate circuit pattern
-    const circuitPattern = document.querySelector('.circuit-pattern');
-    if (circuitPattern) {
-        circuitPattern.classList.add('cursor-active');
     }
 }
 
-function deactivateCursorEffects() {
-    // Deactivate cursor trail
-    if (cursorTrail) {
-        cursorTrail.classList.remove('active');
-    }
-    
-    // Deactivate tech overlay
-    const techOverlay = document.querySelector('.tech-overlay');
-    if (techOverlay) {
-        techOverlay.classList.remove('cursor-active');
-        techOverlay.classList.add('cursor-inactive');
-    }
-    
-    // Deactivate circuit pattern
-    const circuitPattern = document.querySelector('.circuit-pattern');
-    if (circuitPattern) {
-        circuitPattern.classList.remove('cursor-active');
-    }
-}
-
-function createCursorParticle(x, y) {
-    const particle = document.createElement('div');
-    particle.className = 'cursor-particle';
-    particle.style.left = x + 'px';
-    particle.style.top = y + 'px';
-    document.body.appendChild(particle);
-    
-    cursorParticles.push(particle);
-    
-    // Remove particle after animation
-    setTimeout(() => {
-        if (particle.parentNode) {
-            particle.parentNode.removeChild(particle);
-        }
-        cursorParticles = cursorParticles.filter(p => p !== particle);
-    }, 1000);
-}
-
-function createCursorRipple(x, y) {
-    const ripple = document.createElement('div');
-    ripple.className = 'cursor-ripple';
-    ripple.style.left = x + 'px';
-    ripple.style.top = y + 'px';
-    document.body.appendChild(ripple);
-    
-    cursorRipples.push(ripple);
-    
-    // Remove ripple after animation
-    setTimeout(() => {
-        if (ripple.parentNode) {
-            ripple.parentNode.removeChild(ripple);
-        }
-        cursorRipples = cursorRipples.filter(r => r !== ripple);
-    }, 1000);
-}
-
-function createFloatingParticle(x, y) {
-    const particle = document.createElement('div');
-    particle.className = 'floating-particle';
-    particle.style.left = x + 'px';
-    particle.style.top = y + 'px';
-    document.body.appendChild(particle);
-    
-    // Remove particle after animation
-    setTimeout(() => {
-        if (particle.parentNode) {
-            particle.parentNode.removeChild(particle);
-        }
-    }, 3000);
-}
-
-// Initialize cursor effects when DOM is loaded
+// Initialize teddy bear cursor when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // ... existing code ...
+    // Initialize welcome animation first
+    initWelcomeAnimation();
     
-    // Initialize cursor effects
-    initCursorEffects();
+    // Initialize teddy bear cursor
+    initTeddyCursor();
     
     // Initialize contact form
     initContactForm();

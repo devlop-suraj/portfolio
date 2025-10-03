@@ -1,0 +1,89 @@
+/* =========================================
+   ENHANCED COLOR PALETTE & UI IMPROVEMENTS
+   Modern, Consistent Design System
+   ========================================= */
+
+/* COLOR VARIABLES - Enhanced Color Palette */
+:root {
+    /* Primary Colors - Cyan/Blue Theme */
+    --primary-color: #00d4ff;
+    --primary-dark: #0099cc;
+    --primary-light: #33ddff;
+    --primary-glow: rgba(0, 212, 255, 0.3);
+    
+    /* Secondary Colors - Purple/Pink Accent */
+    --secondary-color: #a855f7;
+    --secondary-dark: #7c3aed;
+    --secondary-light: #c084fc;
+    --secondary-glow: rgba(168, 85, 247, 0.3);
+    
+    /* Accent Colors - Gold/Yellow for highlights */
+    --accent-color: #fbbf24;
+    --accent-dark: #f59e0b;
+    --accent-light: #fcd34d;
+    --accent-glow: rgba(251, 191, 36, 0.3);
+    
+    /* Background Colors */
+    --bg-primary: #0f0f23;
+    --bg-secondary: #1a1a2e;
+    --bg-tertiary: #16213e;
+    --bg-card: rgba(0, 212, 255, 0.08);
+    --bg-card-hover: rgba(0, 212, 255, 0.15);
+    
+    /* Text Colors */
+    --text-primary: #ffffff;
+    --text-secondary: #e5e7eb;
+    --text-muted: rgba(255, 255, 255, 0.7);
+    
+    /* Border Colors */
+    --border-primary: rgba(0, 212, 255, 0.3);
+    --border-secondary: rgba(168, 85, 247, 0.3);
+    --border-subtle: rgba(255, 255, 255, 0.1);
+    
+    /* Shadow Colors */
+    --shadow-primary: 0 8px 24px rgba(0, 212, 255, 0.15);
+    --shadow-secondary: 0 8px 24px rgba(168, 85, 247, 0.15);
+    --shadow-large: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+/* ENHANCED GRADIENTS */
+.gradient-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+}
+
+.gradient-secondary {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+}
+
+.gradient-accent {
+    background: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-color) 100%);
+}
+
+.gradient-text-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.gradient-text-accent {
+    background: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-color) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ENHANCED GLASSMORPHISM */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-subtle);
+}
+
+.glass-effect-strong {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid var(--border-primary);
+}
