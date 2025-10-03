@@ -658,7 +658,7 @@ function initTeddyCursor() {
     
     // Section messages
     const sectionMessages = {
-        'home': "Hey, I'm Suraj AI assistant",
+        'home': "Hey I'm your teddy, How may I assist you?",
         'about': "Hey! You're learning about me!",
         'experience': "Hey! You're watching my Experience!",
         'skills': "Check out my awesome Skills!",
@@ -669,7 +669,7 @@ function initTeddyCursor() {
     
     // Messages with emojis for display (emojis don't speak well)
     const sectionMessagesDisplay = {
-        'home': "Hey, I'm Suraj AI assistant 🤖",
+        'home': "Hey I'm your teddy, How may I assist you? 🐻",
         'about': "Hey! You're learning about me! 📖",
         'experience': "Hey! You're watching my Experience! 💼",
         'skills': "Check out my awesome Skills! 🚀",
